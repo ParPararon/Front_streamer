@@ -1,48 +1,51 @@
-//import 'dart:html';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'curreten_playlist.dart';
-import 'playlists.dart';
-import 'authentication.dart';
+import 'package:test_drive/audio_service.dart';
+import 'package:test_drive/models/playlist.dart';
+import 'package:test_drive/providers/list%3Csong%3E_provider.dart';
+import 'package:test_drive/providers/playlist_provider.dart';
+import 'search_page.dart';
+import 'playlist_page.dart';
+import 'authentication_page.dart';
 import 'package:provider/provider.dart';
-import 'song.dart';
-import 'song_provider.dart';
+import 'providers/song_provider.dart';
 import 'song_page.dart';
+import 'providers/cookie_provider.dart';
+import 'providers/ip_provider.dart';
 
-void main() {
+void main(){
+  WidgetsFlutterBinding.ensureInitialized();
+  AudioService.initialize();
   runApp(
-    MyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => SongProvider()),
+        ChangeNotifierProvider(create: (context) => CookieProvider()),
+        ChangeNotifierProvider(create: (context) => IpProvider()),
+        ChangeNotifierProvider(create: (context) => PlayListProvider()),
+        ChangeNotifierProvider(create: (context) => ListSongProvider())
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context){
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => SongProvider(),
-        )
-      ],
-
-    child: MaterialApp(
-      routes: {
-        '/home' :(context) => BasicPage(),
-      },
+    return MaterialApp(
       title: 'Streamer',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue,),
       home: LoginPage(),
-      
-    )
     );
   }
 }
 
+
 class BasicPage extends StatefulWidget{
+  const BasicPage({Key ?key}) :super (key: key);
   @override
   _BasicPageState createState() => _BasicPageState();
 }
@@ -50,10 +53,10 @@ class BasicPage extends StatefulWidget{
 class _BasicPageState extends State<BasicPage>{
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
+
+  final List<Widget> _widgetOptions = <Widget>[
     MyHomePage(),
     CurrutenPlaylist(),
-    Playlists(),
   ];
 
     void _onItemTap(int index){
@@ -66,29 +69,16 @@ class _BasicPageState extends State<BasicPage>{
 
     @override
     Widget build(BuildContext context){
+      Cookie cookie = context.watch<CookieProvider>().cookie;
+      String ip = context.watch<IpProvider>().ip;
       
       return Scaffold(
           body: Center(
             child: _widgetOptions.elementAt(_selectedIndex)
           ),
           
+          bottomSheet:SongPage(cookie: cookie, ip: ip),
           
-          bottomSheet: Container(
-            height: 100,
-            child: Column(
-              children: [
-                if(context.watch<SongProvider>().song == Song("",""))
-                Container()
-                else
-                Container(
-                  height: 100,
-                  child: Center(
-                    child: Text('хуй'),
-                  ),
-                )
-              ],
-            ),
-          ),
           
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.black,
@@ -103,10 +93,6 @@ class _BasicPageState extends State<BasicPage>{
                 BottomNavigationBarItem(
                   icon: Icon(Icons.music_note_outlined),
                   label: 'Ваша музыка',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.library_music),
-                  label: 'Плейлисты',
                 ),
               ],
             currentIndex: _selectedIndex,
