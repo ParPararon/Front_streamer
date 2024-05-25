@@ -283,52 +283,19 @@ class _MyHomePageState extends State<MyHomePage>{
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   Container(
-                                    child: 
-                                    IconButton(
-                                      icon: Icon(Icons.add,color: AppColors.unused_icon,size: 30,),
-                                      onPressed: (){
-                                        _addSong(ip, cookie, _dataList[i].id);
-                                    },
-                                  ),
-                                  ),
-                                  Container(
-                                    child: IconButton(
-                                      icon: Icon(Icons.more_vert,color: AppColors.unused_icon, size: 30,),
-                                      onPressed: (){
-                                        showModalBottomSheet(
-                                          context: context, 
-                                          builder: (BuildContext context){
-                                            return Container(
-                                              height: 200,
-                                              color: AppColors.song_background,
-                                              child: ListView(
-                                                
-                                                children: options.map((String option){
-                                                  return Container(
-                                                    margin: EdgeInsets.all(10),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(10),
-                                                      color: AppColors.background,
-                                                    ),
-
-                                                    child:ListTile(
-                                                      tileColor: AppColors.background,
-                                                      textColor: AppColors.unused_icon,
-                                                      title: Text(option),
-                                                      onTap: (){
-                                                        Navigator.pop(context,option);
-                                                      },
-                                                  ),);
-                                                }
-
-                                                ).toList(),
-                                              ),
-                                            );
-                                          },
-                                        );
+                                    child: PopupMenuButton(
+                                      iconColor: Colors.white,
+                                      itemBuilder: (BuildContext context) =>[
+                                        PopupMenuItem(child: Text('Добавить в Плейлист'), value: 1)
+                                      ], 
+                                      onSelected: (value){
+                                        switch (value){
+                                          case 1:
+                                            break;
+                                        }
                                       },
                                     )
-                                  ),
+                                  )
                                 ],
                               ))
                             ],

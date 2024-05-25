@@ -23,6 +23,14 @@ class AudioService{
     await _audioPlayer.pause();
   }
 
+  static Future<void> loop() async{
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+  }
+
+  static Future<void> unloop() async{
+    await _audioPlayer.setReleaseMode(ReleaseMode.release);
+  }
+
   static Future<void> play(String url) async{
     await _audioPlayer.play(UrlSource(url));
   }

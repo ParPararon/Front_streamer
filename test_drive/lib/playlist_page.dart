@@ -27,7 +27,7 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
   TextEditingController _playlistNameController = TextEditingController();
   final List<String> options = ['Удалить из плейлиста','2','3'];
   String selectedPlaylist = 'Выберите плейлист';
-  List<String> timed =['aaaaa','aaaaa','aaaaa'];
+  //List<String> timed =['aaaaa','aaaaa','aaaaa'];
   List<Playlist> playlists = [];
   List<Song> curPlalistSongs = [];
   late Playlist curPlaylist;
@@ -40,6 +40,10 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
     String ip = ipProvider.ip;
     Cookie cookie = cookieProvider.cookie;
     _loadData(cookie, ip);
+  }
+
+  Future<void> _loading() async{
+    await Future.delayed(Duration(seconds: 1));
   }
 
   void _loadData(Cookie cookie, String ip) async{
@@ -60,6 +64,10 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
       List<dynamic> jsonList = json.decode(response.body);
       playlists = jsonList.map((json) => Playlist.fromJson(json)).toList();
       _loadPlaylistData(playlists.last, cookie, ip);
+      setState(() {
+        curPlaylist = playlists.last;
+        selectedPlaylist = playlists.last.name;
+      });
     }
     else{
       showDialog(
@@ -91,7 +99,7 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
       'Cookie': cookieHeader,
     };
 
-    playlist.songs!.forEach((element) async {
+    playlist.songs.forEach((element) async {
       var url = Uri.parse('http://$ip/fetch/song?id=${element}');
       var response = await http.get(url,headers: headers);
       curPlalistSongs.add(Song.fromJson(json.decode(response.body)));
@@ -100,6 +108,60 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
 
   void _deleteSongFromPlaylist() async{
 
+  }
+
+  void _deletePlayList(Cookie cookie, String ip, Playlist playlist) async{
+    String cookieHeader = '${cookie.name}=${cookie.value}';
+
+    final headers = {
+      'Conten-Type': 'application/json',
+      'Cookie': cookieHeader,
+    };
+    var url = Uri.parse('http://$ip/delete_playlist/${playlist.id}');
+
+    var response = await http.delete(url, headers: headers);
+    if (response.statusCode == 200){
+      showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: Text('Плейлист ${playlist.name} удалён'),
+            content: Text('Надеюсь вы не плачете'),
+            actions: <Widget>[
+              FloatingActionButton(
+                child: Text('Ура?'),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+      );
+      setState(() {
+        selectedPlaylist = playlists.last.name;
+        curPlaylist = playlists.last;
+      });
+    }
+    else{
+      showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: Text('Плейлист ${playlist.name} не удалён'),
+            content: Text('ну заплачте'),
+            actions: <Widget>[
+              FloatingActionButton(
+                child: Text('Ок'),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+      );
+    }
   }
   
 
@@ -134,7 +196,33 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
                     //Правая иконка
                     Container(
                       margin: EdgeInsets.only(right: 30),
-                      child: Icon(Icons.settings, size: 30 ,color: AppColors.unused_icon),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.white,size: 25,),
+                        onPressed: (){
+                          if(curPlaylist.name == playlists.last.name){
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context){
+                                return AlertDialog(
+                                  title: Text('Вы не можете удалить основной плейлист'),
+                                  content: Text('Ну заплачь'),
+                                  actions: <Widget>[
+                                    FloatingActionButton(
+                                      child: Text('Ок'),
+                                      onPressed: (){
+                                        Navigator.of(context).pop();
+                                      },
+                                    )
+                                  ],
+                                );
+                              }
+                            );
+                          }
+                          else{
+                            _deletePlayList(cookie, ip, curPlaylist);
+                          }
+                        },
+                      )
                     ),
                   ],
                 ),
@@ -201,27 +289,18 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Container(
-                                  child: /*IconButton(
-                                    icon: Icon(Icons.more_vert,color: AppColors.unused_icon, size: 30,),
-                                    onPressed: (){*/
-                                      PopupMenuButton(
-                                        iconColor: Colors.white,
-                                        itemBuilder: (BuildContext context) =>[
-                                          PopupMenuItem(
-                                            child: Text('Удалить'),
-                                            value: 1,
-                                          )
-                                        ],
-                                        onSelected: (value){
-                                          switch (value){
-                                            case 1:
-                                              break;
-                                          }
-                                        },
-                                      )
-
-                                    //},
-                                  //)
+                                  child: PopupMenuButton(
+                                    iconColor: Colors.white,
+                                    itemBuilder: (BuildContext context) =>[
+                                      PopupMenuItem(child: Text('Удалить'), value: 1)
+                                    ],
+                                    onSelected: (value){
+                                      switch (value){
+                                        case 1:
+                                          break;
+                                      }
+                                    },
+                                  )
                                 ),
                               ],
                             ))
@@ -248,6 +327,7 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
           children: <Widget>[
             for(var playlist in playlists)
               ListTile(
+                
                 title: Text(playlist.name),
                 onTap: (){
                   setState(() {
