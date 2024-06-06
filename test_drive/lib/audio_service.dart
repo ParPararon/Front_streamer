@@ -1,7 +1,7 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 class AudioService{
-  static AudioPlayer _audioPlayer = AudioPlayer();
+  static final AudioPlayer _audioPlayer = AudioPlayer();
   static Duration _totalDuration = Duration.zero;
   static Duration _currentPosition = Duration.zero;
 
@@ -9,12 +9,12 @@ class AudioService{
   static Duration get totalDuration => _totalDuration;
   static Duration get currentPosition => _currentPosition;
 
-  static void initialize(){
-    _audioPlayer.onDurationChanged.listen((duration) { 
-      _totalDuration = duration;
+  static Future<void> initialize() async {
+    _audioPlayer.durationStream.listen((duration) { 
+      _totalDuration = duration ?? Duration.zero;
     });
 
-    _audioPlayer.onPositionChanged.listen((position) { 
+    _audioPlayer.positionStream.listen((position) { 
       _currentPosition = position;
     });
   }
@@ -24,23 +24,29 @@ class AudioService{
   }
 
   static Future<void> loop() async{
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.setLoopMode(LoopMode.one);
   }
 
   static Future<void> unloop() async{
-    await _audioPlayer.setReleaseMode(ReleaseMode.release);
+    await _audioPlayer.setLoopMode(LoopMode.off);
   }
 
   static Future<void> play(String url) async{
-    await _audioPlayer.play(UrlSource(url));
+    try{
+      await _audioPlayer.setUrl(url);
+      await _audioPlayer.play();
+    }
+    catch(e){
+      print("Error playing audio: $e");
+    }
   }
 
   static Future<void> resume() async{
-    await _audioPlayer.resume();
+    await _audioPlayer.play();
   }
 
   static Future<void> release() async{
-    await _audioPlayer.release();
+    await _audioPlayer.stop();
   }
 
   static Future<void> changeTime(int seconds) async{

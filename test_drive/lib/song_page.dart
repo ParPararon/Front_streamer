@@ -5,8 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_drive/audio_service.dart';
-import 'package:test_drive/models/playlist.dart';
 import 'package:test_drive/models/song.dart';
+import 'package:test_drive/models/songIdList.dart';
 import 'package:test_drive/providers/list%3Csong%3E_provider.dart';
 import 'package:test_drive/providers/song_provider.dart';
 import 'package:http/http.dart' as http;
@@ -31,9 +31,11 @@ class _SongPageState extends State<SongPage>{
 
   }
   List<Song> playList = [];
+  SongIdList radio = SongIdList(ranks: []);
   int currentIndex = 0;
 
-  void _radio(int id ) async{
+  Future<List<Song>> _radio(int id ) async{
+    List<Song> ans = [];
     var url = Uri.parse('http://${this.widget.ip}/radio/${id}');
 
     String cookieHeader = '${this.widget.cookie.name}=${this.widget.cookie.value}';
@@ -45,12 +47,13 @@ class _SongPageState extends State<SongPage>{
 
     var response = await http.get(url,headers: headers);
     if(response.statusCode == 200){
+      radio = SongIdList.fromJson(json.decode(response.body));
       showDialog(
         context: context,
         builder: (BuildContext context){
           return AlertDialog(
             title: Text('Запрос отработал'),
-            content: Text('Но функционала нет(((('),
+            content: Text('ура ура'),
             actions: <Widget>[
               FloatingActionButton(
                 child: Text('Ок'),
@@ -62,6 +65,54 @@ class _SongPageState extends State<SongPage>{
           );
         }
       );
+      print('радио ${radio.toString()}');
+      for(var element in radio.ranks) { 
+        var url = Uri.parse('http://${this.widget.ip}/fetch/song?id=${element}');
+        var response = await http.get(url, headers: headers);
+        if(response.statusCode == 200){
+          ans.add(Song.fromJson(json.decode(response.body)));
+          print('Изменения ');
+          print(playList.toString());
+          showDialog(
+            context: context,
+            builder: (BuildContext context){
+              return AlertDialog(
+                title: Text('Песня с id = ${element} загружена'),
+                content: Text('Ну заплачь'),
+                actions: <Widget>[
+                  FloatingActionButton(
+                    child: Text('Ок'),
+                    onPressed: (){
+                      Navigator.of(context).pop();
+                    },
+                  )
+                ],
+              );
+            }
+          );
+        }
+        else{
+          showDialog(
+            context: context,
+            builder: (BuildContext context){
+              return AlertDialog(
+                title: Text('Песня с id = ${element} не загружена'),
+                content: Text('Ну заплачь'),
+                actions: <Widget>[
+                  FloatingActionButton(
+                    child: Text('Ок'),
+                    onPressed: (){
+                      Navigator.of(context).pop();
+                    },
+                  )
+                ],
+              );
+            }
+          );
+        }
+      }
+      print(ans.toString());
+      return ans;
     }
     else{
       showDialog(
@@ -81,6 +132,7 @@ class _SongPageState extends State<SongPage>{
           );
         }
       );
+      return ans;
     }
   }
   
@@ -133,35 +185,26 @@ class _SongPageState extends State<SongPage>{
                       
                     ),
                     
-                    Text(playList.isNotEmpty ? playList[currentIndex].name : 'Идёт загрузка', style: TextStyle(color: Colors.white,fontSize: 25),),
-                    Text(playList.isNotEmpty ? playList[currentIndex].artist : 'Идёт загрузка', style: TextStyle(color: Colors.white,fontSize: 17)),
-                    Text(playList.isNotEmpty ? playList[currentIndex].album : 'Идёт загрузка',style: TextStyle(color: Colors.white,fontSize: 15),),
+                    Text(playList.isNotEmpty ? playList[currentIndex].name : 'Трек ещё не выбран', style: TextStyle(color: Colors.white,fontSize: 25),),
+                    Text(playList.isNotEmpty ? playList[currentIndex].artist : 'Трек ещё не выбран', style: TextStyle(color: Colors.white,fontSize: 17)),
+                    Text(playList.isNotEmpty ? playList[currentIndex].album : 'Трек ещё не выбран',style: TextStyle(color: Colors.white,fontSize: 15),),
                     
-                    StreamBuilder<Duration>(
-                      stream: AudioService.audioPlayer.onPositionChanged,
-                      builder: (context,snapshot){
+                    StreamBuilder<Duration?>(
+                      stream: AudioService.audioPlayer.positionStream,
+                      builder: (context, snapshot) {
                         final currentPosition = snapshot.data ?? Duration.zero;
-                        return StreamBuilder<Duration>(
-                          stream: AudioService.audioPlayer.onDurationChanged,
+                        return StreamBuilder<Duration?>(
+                          stream: AudioService.audioPlayer.durationStream,
                           builder: (context, snapshot) {
                             final totalDuration = snapshot.data ?? Duration.zero;
-                            return Column(
-                              children: [
-                                Slider(
-                                  activeColor: Colors.green[900],
-                                  min: 0,
-                                  max: totalDuration.inSeconds.toDouble(),
-                                  value: currentPosition.inSeconds.toDouble().clamp(0, totalDuration.inSeconds.toDouble(),),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      AudioService.changeTime(value.toInt());
-                                    });
-                                  },
-                                ),
-                                Text(
-                                  '${formatDuration(currentPosition)} / ${formatDuration(totalDuration)}', style: TextStyle(color: Colors.white, fontSize: 15),
-                                )
-                              ],
+                            return Slider(
+                              value: currentPosition.inSeconds.toDouble(),
+                              max: totalDuration.inSeconds.toDouble(),
+                              onChanged: (value) {
+                                setState(() {
+                                  AudioService.changeTime(value.toInt());
+                                });
+                              },
                             );
                           },
                         );
@@ -201,7 +244,7 @@ class _SongPageState extends State<SongPage>{
                               AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
                             }
                             else{
-                              AudioService.release();
+                              //AudioService.release();
                               AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
                             }
                           },
@@ -248,7 +291,7 @@ class _SongPageState extends State<SongPage>{
                           icon: Icon(Icons.skip_next_rounded,size: 50, color: Colors.white,),
                           onPressed: (){
                             if(currentIndex == playList.length -1){
-                              AudioService.release();
+                              //AudioService.release();
                               AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
                             }
                             else{
@@ -263,8 +306,13 @@ class _SongPageState extends State<SongPage>{
                         //Радио
                         IconButton(
                           icon: Icon(Icons.radar, size: 50, color: Colors.white,),
-                          onPressed: () {
-                            _radio(playList[currentIndex].id);
+                          onPressed: () async{
+                            print(playList.toString());
+                            playList = await _radio(playList[currentIndex].id);
+                            setState(() {
+                             playList;
+                            });
+                            print(playList.toString());
                           },
                         ),
 
@@ -292,8 +340,13 @@ class _SongPageState extends State<SongPage>{
                       ),
                     )
                     else
-                      Text(context.watch<SongProvider>().song.name, style: TextStyle(color: Colors.white,fontSize: 20),),
-                      Text(context.watch<SongProvider>().song.artist, style: TextStyle(color: Colors.white, fontSize: 15),)
+                      Column(
+                        children: [
+                          Text(context.watch<SongProvider>().song.name, style: TextStyle(color: Colors.white,fontSize: 20),),
+                          Text(context.watch<SongProvider>().song.artist, style: TextStyle(color: Colors.white, fontSize: 15),)
+                        ]
+                      )
+                      
                   ],
                 )
                   

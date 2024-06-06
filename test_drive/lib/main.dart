@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:test_drive/audio_service.dart';
-import 'package:test_drive/models/playlist.dart';
 import 'package:test_drive/providers/list%3Csong%3E_provider.dart';
 import 'package:test_drive/providers/playlist_provider.dart';
 import 'search_page.dart';
@@ -13,9 +12,13 @@ import 'song_page.dart';
 import 'providers/cookie_provider.dart';
 import 'providers/ip_provider.dart';
 
-void main(){
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AudioService.initialize();
+  try{
+  await AudioService.initialize();
+  }catch(e){
+    print(e);
+  }
   runApp(
     MultiProvider(
       providers: [
@@ -54,7 +57,7 @@ class _BasicPageState extends State<BasicPage>{
   int _selectedIndex = 0;
 
 
-  final List<Widget> _widgetOptions = <Widget>[
+  List<Widget> _widgetOptions = <Widget>[
     MyHomePage(),
     CurrutenPlaylist(),
   ];

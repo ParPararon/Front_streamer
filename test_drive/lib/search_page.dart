@@ -10,6 +10,7 @@ import 'package:test_drive/providers/ip_provider.dart';
 import 'package:test_drive/models/song.dart';
 import 'package:test_drive/providers/playlist_provider.dart';
 import 'package:test_drive/providers/song_provider.dart';
+import 'package:test_drive/settings_page.dart';
 import 'app_colors.dart' as AppColors;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -53,33 +54,48 @@ class _MyHomePageState extends State<MyHomePage>{
       if(input == ""){
       }
       else{
+        List<int> cashe = [];
         for(int i = 0; i < _dataList.length;i++){
           if(!(_dataList[i].name.contains(input) || _dataList[i].artist.contains(input) || _dataList[i].album.contains(input))){
-            _dataList.removeAt(i);
+            cashe.add(i);
           }
+        }
+        for(int el in cashe.reversed){
+          _dataList.removeAt(el);
         }
       }
     }
     else if(index  == 1){
+      List<int> cashe = [];
       for(int i = 0; i < _dataList.length;i++){
         if(!(_dataList[i].name.contains(input))){
-          _dataList.removeAt(i);
+          cashe.add(i);
         }
       }
+      for(int el in cashe.reversed){
+          _dataList.removeAt(el);
+        }
     }
     else if(index  == 2){
+      List<int> cashe = [];
       for(int i = 0; i < _dataList.length;i++){
         if(!(_dataList[i].artist.contains(input))){
-          _dataList.removeAt(i);
-        }
+          cashe.add(i);        }
       }
+      for(int el in cashe.reversed){
+          _dataList.removeAt(el);
+        }
     }
     else if(index  == 3){
+      List<int> cashe = [];
       for(int i = 0; i < _dataList.length;i++){
         if(!(_dataList[i].album.contains(input))){
-          _dataList.removeAt(i);
+          cashe.add(i);
         }
       }
+      for(int el in cashe.reversed){
+          _dataList.removeAt(el);
+        }
     }
     _dataList.forEach((element) {
       search.songs!.add(element.id);
@@ -126,6 +142,17 @@ class _MyHomePageState extends State<MyHomePage>{
     }
   }
   
+  Future<void> _addSongToPlaylist(Cookie cookie, String ip) async{
+    var url = Uri.parse('http://$ip/fetch/all');
+
+    String cookieHeader = '${cookie.name}=${cookie.value}';
+
+    final headers = {
+      'Conten-Type': 'application/json',
+      'Cookie': cookieHeader,
+    };
+  }
+
   @override
   Widget build(BuildContext context){
     String ip = context.watch<IpProvider>().ip;
@@ -139,21 +166,27 @@ class _MyHomePageState extends State<MyHomePage>{
           body: Column(
             
             children: [
-              // Иконка меню
-              Container(
-                margin: const EdgeInsets.only(left: 20, right: 20,top: 10),
-                child: Row(
+
+              Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                Icon(Icons.settings, size: 30 ,color: AppColors.unused_icon)
-              ]),
+                  Container(
+                    margin: const EdgeInsets.only(left: 20, right: 20, top: 10),
+                    child: IconButton(
+                      icon: Icon(Icons.settings, size: 30 , color: Colors.white,),
+                      onPressed: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>SettingsPage()));
+                      },
+                    ),
+                  )
+                ],
               ),
               // Текст Поиск
               Row(
                 children: [
                 Container(
                   margin: const EdgeInsets.only(left: 30),
-                  child: Text("Поиск", style: TextStyle(fontSize: 35, color: AppColors.unused_icon),),
+                  child: Text("Поиск", style: TextStyle(fontSize: 25, color: AppColors.unused_icon),),
                 )],
               ),
               //Строка Поиска
@@ -220,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage>{
                 children: [
                   Container(
                     margin: const EdgeInsets.only(left: 30, top: 25),
-                    child: Text("Результаты", style: TextStyle(fontSize: 35, color: AppColors.unused_icon),),
+                    child: Text("Результаты", style: TextStyle(fontSize: 25, color: AppColors.unused_icon),),
                   )
                 ],
               ),
@@ -282,6 +315,12 @@ class _MyHomePageState extends State<MyHomePage>{
                               Expanded(child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
+                                  IconButton(
+                                    icon: Icon(Icons.add,size: 25, color: Colors.white,),
+                                    onPressed: (){
+                                      _addSong(ip, cookie, _dataList[i].id);
+                                    },
+                                  ),
                                   Container(
                                     child: PopupMenuButton(
                                       iconColor: Colors.white,

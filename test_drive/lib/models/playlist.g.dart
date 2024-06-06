@@ -10,8 +10,8 @@ Playlist _$PlaylistFromJson(Map<String, dynamic> json) => Playlist(
       id: (json['id'] as num).toInt(),
       user_id: (json['user_id'] as num).toInt(),
       name: json['name'] as String,
-      songs: (json['songs'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
+      songs: (json['songs'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
           .toList() ?? [],
     );
 
