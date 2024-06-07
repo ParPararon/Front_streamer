@@ -276,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage>{
                   itemBuilder: (_,i){
                   return Container(
                     height: 80,
-                    margin: const EdgeInsets.only(left: 30, right: 30),
+                    margin: const EdgeInsets.only(left: 20, right: 20),
                     child: Container(
                       margin: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -303,12 +303,13 @@ class _MyHomePageState extends State<MyHomePage>{
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
+                                    margin: EdgeInsets.only(bottom: 5),
                                     child: Text(_dataList[i].name,
-                                    style: TextStyle(fontSize: 16, color: AppColors.unused_icon),),
+                                    style: TextStyle(fontSize: 14, color: AppColors.unused_icon),),
                                   ),
                                   Container(
                                     child: Text(_dataList[i].artist, 
-                                      style: TextStyle(fontSize: 11, color: AppColors.unused_icon),),
+                                      style: TextStyle(fontSize: 10, color: AppColors.unused_icon),),
                                   ),
                                 ],
                               ),

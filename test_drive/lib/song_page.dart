@@ -265,11 +265,12 @@ class _SongPageState extends State<SongPage>{
                               setState(() {
                                 currentIndex -=1;
                               });
-                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                              AudioService.release();
+                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}',this.widget.ip);
                             }
                             else{
-                              //AudioService.release();
-                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                              AudioService.release();
+                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}',this.widget.ip);
                             }
                           },
                         ),
@@ -297,9 +298,10 @@ class _SongPageState extends State<SongPage>{
                                 );
                               }
                               else{
-                                await _loadm3uFile();
-                                AudioService.play('http://${this.widget.ip}/${parsedSong[0]}');
+                                //await _loadm3uFile();
+                                //AudioService.play('http://${this.widget.ip}/${parsedSong[0]}');
                                 //AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                                AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}', this.widget.ip);
                               }
                             }
                             else{
@@ -318,13 +320,15 @@ class _SongPageState extends State<SongPage>{
                           onPressed: (){
                             if(currentIndex == playList.length -1){
                               //AudioService.release();
-                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                              AudioService.release();
+                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}',this.widget.ip);
                             }
                             else{
                               setState(() {
                                 currentIndex +=1;
                               });
-                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                              AudioService.release();
+                              AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}',this.widget.ip);
                             }
                           },
                         ),
@@ -333,6 +337,7 @@ class _SongPageState extends State<SongPage>{
                         IconButton(
                           icon: Icon(Icons.radar, size: 50, color: Colors.white,),
                           onPressed: () async{
+                            AudioService.release();
                             print(playList.toString());
                             playList = await _radio(playList[currentIndex].id);
                             setState(() {

@@ -295,7 +295,7 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
                     },
                   child: Container(
                     height: 80,
-                    margin: const EdgeInsets.only(left: 30, right: 30),
+                    margin: const EdgeInsets.only(left: 20, right: 20),
                     child: Container(
                       margin: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -316,12 +316,13 @@ class _CurrutenPlaylistState extends State<CurrutenPlaylist>{
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
+                                  margin: EdgeInsets.only(bottom: 5),
                                   child: Text(curPlalistSongs[i].name,
-                                   style: TextStyle(fontSize: 16, color: AppColors.unused_icon),),
+                                   style: TextStyle(fontSize: 14, color: AppColors.unused_icon),),
                                 ),
                                 Container(
                                   child: Text(curPlalistSongs[i].artist, 
-                                    style: TextStyle(fontSize: 11, color: AppColors.unused_icon),),
+                                    style: TextStyle(fontSize: 10, color: AppColors.unused_icon),),
                                 ),
                               ],
                             ),
