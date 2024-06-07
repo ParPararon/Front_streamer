@@ -16,7 +16,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try{
   await AudioService.initialize();
-  }catch(e){
+  }
+  catch(e){
     print(e);
   }
   runApp(

@@ -28,11 +28,26 @@ class _SongPageState extends State<SongPage>{
   @override
   void initState(){
     super.initState();
-
   }
+
   List<Song> playList = [];
+  List<String> parsedSong = [];
   SongIdList radio = SongIdList(ranks: []);
   int currentIndex = 0;
+
+  Future<void> _loadm3uFile() async{
+    final response = await http.get(Uri.parse('http://${this.widget.ip}/play/${playList[currentIndex].id}'));
+    if (response.statusCode == 200){
+      final content = response.body;
+      parsedSong = _parsem3uContent(content);
+      print(parsedSong);
+    }
+  }
+
+  List<String> _parsem3uContent(String content){
+    final lines = LineSplitter.split(content).toList();
+    return lines.where((line)=> line.isNotEmpty && !line.startsWith('#')).toList();
+  }
 
   Future<List<Song>> _radio(int id ) async{
     List<Song> ans = [];
@@ -189,22 +204,31 @@ class _SongPageState extends State<SongPage>{
                     Text(playList.isNotEmpty ? playList[currentIndex].artist : 'Трек ещё не выбран', style: TextStyle(color: Colors.white,fontSize: 17)),
                     Text(playList.isNotEmpty ? playList[currentIndex].album : 'Трек ещё не выбран',style: TextStyle(color: Colors.white,fontSize: 15),),
                     
-                    StreamBuilder<Duration?>(
-                      stream: AudioService.audioPlayer.positionStream,
-                      builder: (context, snapshot) {
+                    StreamBuilder<Duration>(
+                      stream: AudioService.audioPlayer.onPositionChanged,
+                      builder: (context,snapshot){
                         final currentPosition = snapshot.data ?? Duration.zero;
-                        return StreamBuilder<Duration?>(
-                          stream: AudioService.audioPlayer.durationStream,
+                        return StreamBuilder<Duration>(
+                          stream: AudioService.audioPlayer.onDurationChanged,
                           builder: (context, snapshot) {
                             final totalDuration = snapshot.data ?? Duration.zero;
-                            return Slider(
-                              value: currentPosition.inSeconds.toDouble(),
-                              max: totalDuration.inSeconds.toDouble(),
-                              onChanged: (value) {
-                                setState(() {
-                                  AudioService.changeTime(value.toInt());
-                                });
-                              },
+                            return Column(
+                              children: [
+                                Slider(
+                                  activeColor: Colors.green[900],
+                                  min: 0,
+                                  max: totalDuration.inSeconds.toDouble(),
+                                  value: currentPosition.inSeconds.toDouble().clamp(0, totalDuration.inSeconds.toDouble(),),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      AudioService.changeTime(value.toInt());
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  '${formatDuration(currentPosition)} / ${formatDuration(totalDuration)}', style: TextStyle(color: Colors.white, fontSize: 15),
+                                )
+                              ],
                             );
                           },
                         );
@@ -251,7 +275,7 @@ class _SongPageState extends State<SongPage>{
                         ),
                         //Старт/Пауза
                         IconButton(
-                          onPressed: (){
+                          onPressed: () async {
                             if(_isPlaying == false){
                               if(playList.length == 0){
                                 showDialog(
@@ -273,7 +297,9 @@ class _SongPageState extends State<SongPage>{
                                 );
                               }
                               else{
-                                AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
+                                await _loadm3uFile();
+                                AudioService.play('http://${this.widget.ip}/${parsedSong[0]}');
+                                //AudioService.play('http://${this.widget.ip}/play/${playList[currentIndex].id}');
                               }
                             }
                             else{

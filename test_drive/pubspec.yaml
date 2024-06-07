@@ -18,6 +18,7 @@ dependencies:
   http: ^1.2.1
   audioplayers: ^6.0.0
   just_audio: ^0.9.38
+  audio_session: ^0.1.6
   shared_preferences: ^2.0.7
 
 dev_dependencies:
